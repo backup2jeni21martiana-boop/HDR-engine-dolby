@@ -1,0 +1,41 @@
+name: Build Android APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Extract Project ZIP
+        run: |
+          unzip *.zip -d project_files || true
+          mv project_files/* . || true
+
+      - name: Install Cordova Compiler
+        run: npm install -g cordova
+
+      - name: Create Android Platform
+        run: |
+          cordova create build_folder com.hdrengine.app HDREngine
+          cd build_folder
+          cp -r ../index.html www/ || cp -r ../* www/ || true
+          cordova platform add android
+
+      - name: Compile to APK
+        run: |
+          cd build_folder
+          cordova build android --debug
+
+      - name: Upload APK Result
+        uses: actions/upload-artifact@v3
+        with:
+          name: HDREngine-Debug-APK
+          path: build_folder/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+q2
